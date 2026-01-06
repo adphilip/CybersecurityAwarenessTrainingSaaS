@@ -1,10 +1,12 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers || {})
     }
   });

@@ -1,12 +1,15 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
+import { useAuth } from '../../lib/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { setToken } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -16,18 +19,20 @@ export default function Login() {
 
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
-      const response = await fetch(`${API_BASE}/auth/request-link`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        setMessage('Magic link sent! Check your email to log in.');
+      if (response.ok && data.token) {
+        setToken(data.token);
+        setMessage('Logged in successfully! Redirecting...');
+        setTimeout(() => router.push('/'), 800);
       } else {
-        setError(data.error || 'Failed to send magic link');
+        setError(data.error === 'invalid_credentials' ? 'Invalid email or password' : (data.error || 'Login failed'));
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -50,7 +55,7 @@ export default function Login() {
             Admin Login
           </h1>
           <p style={{ marginBottom: '2rem', color: '#9ca3af', textAlign: 'center' }}>
-            Enter your email to receive a magic link
+            Enter your email and password to log in
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -66,6 +71,30 @@ export default function Login() {
                 required
                 disabled={loading}
                 placeholder="admin@company.com"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontSize: '1rem',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '6px',
+                  color: 'white',
+                  outline: 'none',
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                placeholder="••••••••"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -123,12 +152,12 @@ export default function Login() {
                 transition: 'all 0.2s',
               }}
             >
-              {loading ? 'Sending...' : 'Send Magic Link'}
+              {loading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: '#9ca3af' }}>
-            <p>No password required. We&apos;ll email you a secure login link.</p>
+            <p>Password login enabled. Magic link planned for later.</p>
           </div>
         </div>
       </div>
