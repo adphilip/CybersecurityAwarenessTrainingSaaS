@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { Pool } = require('pg');
 const { parse } = require('csv-parse/sync');
 
@@ -12,6 +13,7 @@ const pool = new Pool({
 });
 
 const app = express();
+app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'cybersecurity-awareness-mvp' }));

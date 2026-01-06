@@ -24,6 +24,20 @@ This repository contains a minimal Node.js backend scaffold implementing the cor
 - `npm start` – run API server
 - `npm run migrate` – apply `db/init.sql`
 - `npm run cron` – run placeholder schedulers
+- `npm test` – run backend tests
+
+## Frontend (Next.js)
+Located in `web/`.
+- Env: `NEXT_PUBLIC_API_BASE` (defaults to http://localhost:4000)
+- Scripts: `npm run dev`, `npm run build`, `npm start` (inside web/)
+
+Install and run:
+```bash
+cd web
+npm install
+npm run dev
+```
+Then open http://localhost:3000
 
 ## PostgreSQL Setup
 
