@@ -1,8 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const { parse } = require('csv-parse/sync');
+const { signJWT, verifyJWT, sendMagicLink, TOKEN_EXPIRY } = require('./lib/auth');
 
 const PORT = process.env.PORT || 4000;
 
@@ -16,7 +18,119 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
 
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: 'Too many auth attempts, try again later'
+});
+
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'cybersecurity-awareness-mvp' }));
+
+// ===== AUTH ENDPOINTS =====
+
+// POST /auth/request-link - Request a magic link
+app.post('/auth/request-link', authLimiter, async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: 'email_required' });
+  }
+
+  try {
+    // Find admin by email
+    const adminResult = await pool.query('SELECT id, email FROM admins WHERE email = $1', [email]);
+    
+    if (adminResult.rows.length === 0) {
+      // Don't reveal whether email exists (security)
+      return res.status(200).json({ message: 'If email exists, magic link sent' });
+    }
+
+    const admin = adminResult.rows[0];
+    const tokenString = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY);
+
+    // Create auth token record
+    await pool.query(
+      'INSERT INTO auth_tokens (admin_id, token, expires_at, created_at) VALUES ($1, $2, $3, now())',
+      [admin.id, tokenString, expiresAt]
+    );
+
+    // Send magic link email
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    await sendMagicLink(email, tokenString, frontendUrl);
+
+    res.status(200).json({ message: 'Magic link sent if email exists' });
+  } catch (err) {
+    console.error('POST /auth/request-link error:', err);
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
+// POST /auth/verify - Verify magic link token and return JWT
+app.post('/auth/verify', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ error: 'token_required' });
+  }
+
+  try {
+    // Find token record
+    const tokenResult = await pool.query(
+      'SELECT * FROM auth_tokens WHERE token = $1',
+      [token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(401).json({ error: 'invalid_token' });
+    }
+
+    const tokenRecord = tokenResult.rows[0];
+
+    // Check if expired
+    if (new Date() > new Date(tokenRecord.expires_at)) {
+      return res.status(401).json({ error: 'token_expired' });
+    }
+
+    // Check if already used
+    if (tokenRecord.used_at) {
+      return res.status(401).json({ error: 'token_already_used' });
+    }
+
+    // Mark token as used
+    await pool.query(
+      'UPDATE auth_tokens SET used_at = now() WHERE id = $1',
+      [tokenRecord.id]
+    );
+
+    // Generate JWT
+    const jwtToken = signJWT(tokenRecord.admin_id);
+
+    res.status(200).json({ token: jwtToken });
+  } catch (err) {
+    console.error('POST /auth/verify error:', err);
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
+// Middleware to verify JWT
+const verifyTokenMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
+  const token = authHeader.substring(7);
+  const decoded = verifyJWT(token);
+
+  if (!decoded) {
+    return res.status(401).json({ error: 'invalid_token' });
+  }
+
+  req.adminId = decoded.admin_id;
+  next();
+};
 
 // Create company (simple)
 app.post('/company', async (req, res) => {

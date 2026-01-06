@@ -81,6 +81,16 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
   completed_at timestamptz
 );
 
+-- auth_tokens (for magic link tokens)
+CREATE TABLE IF NOT EXISTS auth_tokens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id uuid REFERENCES admins(id) ON DELETE CASCADE,
+  token text UNIQUE NOT NULL,
+  expires_at timestamptz NOT NULL,
+  used_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+
 -- subscriptions
 CREATE TABLE IF NOT EXISTS subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
