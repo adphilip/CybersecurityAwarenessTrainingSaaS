@@ -73,7 +73,7 @@ app.post('/auth/request-link', authLimiter, async (req, res) => {
     }
 
     const admin = adminResult.rows[0];
-    const tokenString = require('crypto').randomBytes(32).toString('hex');
+    const tokenString = require('node:crypto').randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + TOKEN_EXPIRY);
 
     // Create auth token record
@@ -353,7 +353,7 @@ app.get('/quiz/:token', async (req, res) => {
 });
 
 app.post('/quiz/:token/submit', async (req, res) => {
-  const { answers, employee_id, quiz_id } = req.body;
+  const { employee_id, quiz_id } = req.body;
   const score = 100;
   try {
     await pool.query(

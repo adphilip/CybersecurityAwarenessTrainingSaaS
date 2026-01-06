@@ -1,11 +1,11 @@
 require('dotenv').config();
-const fs = require('fs');
+const fs = require('node:fs');
 const { Pool } = require('pg');
 
 const sql = fs.readFileSync(__dirname + '/db/init.sql', 'utf8');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-async function run() {
+(async () => {
   const client = await pool.connect();
   try {
     console.log('Running migrations...');
@@ -18,6 +18,4 @@ async function run() {
     client.release();
     process.exit(0);
   }
-}
-
-run();
+})();

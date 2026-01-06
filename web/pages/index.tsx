@@ -4,7 +4,7 @@ import { health, listCampaigns, getReport, startCampaign } from '../lib/api';
 export default function Dashboard() {
   const [status, setStatus] = useState<string>('checking...');
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [report, setReport] = useState<any | null>(null);
+  const [report, setReport] = useState<any>(null);
   const [selectedId, setSelectedId] = useState<string>('');
   const [loading, setLoading] = useState(false);
 

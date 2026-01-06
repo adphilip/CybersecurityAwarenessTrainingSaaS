@@ -12,7 +12,7 @@ jobs:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: csat_user
-          POSTGRES_PASSWORD: csat_password
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: csat_mvp
         ports:
           - 5432:5432
@@ -23,7 +23,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://csat_user:csat_password@localhost:5432/csat_mvp
+      DATABASE_URL: postgresql://csat_user:postgres@localhost:5432/csat_mvp
       NODE_ENV: test
 
     steps:

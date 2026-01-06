@@ -1,6 +1,6 @@
 const request = require('supertest');
 const { app } = require('../app');
-const { execSync } = require('child_process');
+const { execSync } = require('node:child_process');
 const { Pool } = require('pg');
 
 // Get admin email from seeded data

@@ -14,6 +14,7 @@ export default function QuizPage() {
       await submitQuiz(String(token), { quiz_id: 'sample', employee_id: null, answers: [] });
       setStatus('done');
     } catch (e) {
+      console.error('Failed to submit quiz:', e);
       setStatus('error');
     }
   };

@@ -8,18 +8,18 @@ export type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setTokenState] = useState<string | null>(null);
+export function AuthProvider({ children }: { readonly children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(null);
 
   // Load token from localStorage on first render
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
-    if (stored) setTokenState(stored);
+    const stored = globalThis.window === undefined ? null : localStorage.getItem('jwt_token');
+    if (stored) setToken(stored);
   }, []);
 
   // Persist token to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (globalThis.window === undefined) return;
     if (token) {
       localStorage.setItem('jwt_token', token);
     } else {
@@ -27,10 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const setToken = (value: string | null) => setTokenState(value);
-  const logout = () => setTokenState(null);
+  const updateToken = (value: string | null) => setToken(value);
+  const logout = () => setToken(null);
 
-  const value = useMemo(() => ({ token, setToken, logout }), [token]);
+  const value = useMemo(() => ({ token, setToken: updateToken, logout }), [token]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

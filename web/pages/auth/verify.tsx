@@ -33,14 +33,15 @@ export default function Verify() {
           }, 1000);
         } else {
           setStatus('error');
-          setMessage(data.error === 'token_expired' 
-            ? 'This magic link has expired. Please request a new one.'
-            : data.error === 'token_already_used'
-            ? 'This magic link has already been used. Please request a new one.'
-            : data.error === 'invalid_token'
-            ? 'Invalid magic link. Please request a new one.'
-            : 'Verification failed. Please try again.'
-          );
+          let errorMessage = 'Verification failed. Please try again.';
+          if (data.error === 'token_expired') {
+            errorMessage = 'This magic link has expired. Please request a new one.';
+          } else if (data.error === 'token_already_used') {
+            errorMessage = 'This magic link has already been used. Please request a new one.';
+          } else if (data.error === 'invalid_token') {
+            errorMessage = 'Invalid magic link. Please request a new one.';
+          }
+          setMessage(errorMessage);
         }
       } catch (err) {
         console.error('Verification error:', err);
