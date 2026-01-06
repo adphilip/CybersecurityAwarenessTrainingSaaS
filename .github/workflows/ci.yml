@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: csat_user
+          POSTGRES_PASSWORD: csat_password
+          POSTGRES_DB: csat_mvp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U csat_user -d csat_mvp" \
+          --health-interval 5s \
+          --health-timeout 5s \
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://csat_user:csat_password@localhost:5432/csat_mvp
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        run: npm run migrate
+
+      - name: Run tests
+        run: npm test
