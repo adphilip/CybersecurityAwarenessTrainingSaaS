@@ -126,8 +126,35 @@ npm run cron
 
 ## Testing the API
 
+### Authentication (Magic Link + JWT)
+Request a magic link email, then verify token to get JWT:
+
 ```bash
-# Health check
+# Request magic link
+curl -X POST http://localhost:4000/auth/request-link \
+	-H "Content-Type: application/json" \
+	-d '{"email":"admin@demo.test"}'
+# Response: {"message":"Magic link sent if email exists"}
+
+# Verify token (from email link or DB query)
+curl -X POST http://localhost:4000/auth/verify \
+	-H "Content-Type: application/json" \
+	-d '{"token":"<token_from_link>"}'
+# Response: {"token":"<jwt_token>"}
+
+# Use JWT for protected routes
+curl http://localhost:4000/campaigns \
+	-H "Authorization: Bearer <jwt_token>"
+```
+
+**Auth details:**
+- Magic link tokens expire after 24 hours
+- JWT tokens expire after 1 hour
+- Email sending: uses nodemailer (SMTP or test mock)
+- Rate limit: 5 attempts per 15 minutes on /auth/request-link
+
+### Other endpoints
+
 curl http://localhost:4000/
 
 # Create a company
@@ -170,7 +197,7 @@ Notes
 - Endpoints are basic stubs intended to capture MVP flows; expand business logic and validation before production.
 
 ## Endpoint map (per spec)
-- Auth (not yet implemented): POST /auth/request-link, POST /auth/verify
+- Auth: POST /auth/request-link, POST /auth/verify ✅ (magic-link + JWT)
 - Company & Employees: GET /company, POST /employees/import, GET /employees, PATCH /employees/{id}/deactivate
 - Campaigns: POST /campaigns, GET /campaigns, GET /campaigns/{id}, POST /campaigns/{id}/start, POST /campaigns/{id}/close
 - Phishing tracking: GET /phishing/open/{token}, GET /phishing/click/{token}
