@@ -1,0 +1,16 @@
+# Node/Logs
+node_modules
+npm-debug.log*
+server.log
+
+# Env
+.env
+
+# OS
+.DS_Store
+
+# Coverage / tests
+coverage
+
+# Docker volumes (ignore local bind artifacts)
+postgres_data
