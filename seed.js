@@ -19,7 +19,7 @@ async function seed() {
 
     await client.query(`
       INSERT INTO admins (id, company_id, email, created_at)
-      VALUES ($1, $2, 'admin@demo.test', now())
+      VALUES ($1, $2, 'adrian.filipescu@gmail.com', now())
       ON CONFLICT (id) DO NOTHING;
     `, ['22222222-2222-2222-2222-222222222222', companyId]);
 
