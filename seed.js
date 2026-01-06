@@ -19,9 +19,17 @@ async function seed() {
 
     await client.query(`
       INSERT INTO admins (id, company_id, email, created_at)
-      VALUES ($1, $2, 'adrian.filipescu@gmail.com', now())
+      VALUES ($1, $2, 'admin@demo.test', now())
       ON CONFLICT (id) DO NOTHING;
     `, ['22222222-2222-2222-2222-222222222222', companyId]);
+
+    // Set a default password (hashed) for the admin
+    // Password: changeme123 (update in production)
+    await client.query(
+      `UPDATE admins
+       SET password_hash = crypt('changeme123', gen_salt('bf'))
+       WHERE email = 'admin@demo.test';`
+    );
 
     // Employees
     const employees = [
