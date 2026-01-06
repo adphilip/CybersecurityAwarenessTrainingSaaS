@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at timestamptz DEFAULT now()
 );
 
+-- add password hash for email+password auth
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS password_hash text;
+
 -- employees
 CREATE TABLE IF NOT EXISTS employees (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -29,6 +29,32 @@ app.get('/', (req, res) => res.json({ status: 'ok', app: 'cybersecurity-awarenes
 
 // ===== AUTH ENDPOINTS =====
 
+// POST /auth/login - Email + Password login
+app.post('/auth/login', authLimiter, async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email_and_password_required' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id FROM admins WHERE email = $1 AND password_hash = crypt($2, password_hash)`,
+      [email, password]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'invalid_credentials' });
+    }
+
+    const adminId = result.rows[0].id;
+    const jwtToken = signJWT(adminId);
+    return res.status(200).json({ token: jwtToken });
+  } catch (err) {
+    console.error('POST /auth/login error:', err);
+    return res.status(500).json({ error: 'db_error' });
+  }
+});
+
 // POST /auth/request-link - Request a magic link
 app.post('/auth/request-link', authLimiter, async (req, res) => {
   const { email } = req.body;
