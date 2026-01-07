@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../lib/auth';
 
@@ -9,7 +9,14 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { setToken } = useAuth();
+  const { token, setToken } = useAuth();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (token) {
+      router.push('/');
+    }
+  }, [token, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

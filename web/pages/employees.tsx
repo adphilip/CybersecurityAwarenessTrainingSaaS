@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { listEmployees } from '../lib/api';
+import { withAuth } from '../lib/withAuth';
 
-export default function Employees() {
+function Employees() {
   const [companyId, setCompanyId] = useState('11111111-1111-1111-1111-111111111111');
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,3 +47,5 @@ export default function Employees() {
     </main>
   );
 }
+
+export default withAuth(Employees);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { listCampaigns, createCampaign } from '../lib/api';
+import { withAuth } from '../lib/withAuth';
 
-export default function Campaigns() {
+function Campaigns() {
   const [companyId, setCompanyId] = useState('11111111-1111-1111-1111-111111111111');
   const [month, setMonth] = useState('2026-01-01');
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -46,3 +47,5 @@ export default function Campaigns() {
     </main>
   );
 }
+
+export default withAuth(Campaigns);

@@ -65,3 +65,9 @@ a {
   padding: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

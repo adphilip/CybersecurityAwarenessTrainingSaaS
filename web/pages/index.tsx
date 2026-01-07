@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { health, listCampaigns, getReport, startCampaign } from '../lib/api';
+import { withAuth } from '../lib/withAuth';
+import { useAuth } from '../lib/auth';
 
-export default function Dashboard() {
+function Dashboard() {
+  const { logout } = useAuth();
   const [status, setStatus] = useState<string>('checking...');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [report, setReport] = useState<any>(null);
@@ -38,8 +41,15 @@ export default function Dashboard() {
   return (
     <main className="main">
       <div className="card">
-        <h1>Admin Dashboard</h1>
-        <p>Status: {status}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>Status: {status}</p>
+          </div>
+          <button className="button" onClick={logout} style={{ backgroundColor: '#ef4444' }}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="card">
@@ -72,3 +82,5 @@ export default function Dashboard() {
     </main>
   );
 }
+
+export default withAuth(Dashboard);
