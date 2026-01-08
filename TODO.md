@@ -2,8 +2,9 @@
 
 ## Frontend Authentication
 - [x] Create frontend auth pages (login + verify)
-- [ ] Add JWT storage and auth context in frontend
-- [ ] Protect admin dashboard routes with auth middleware
+- [x] Add JWT storage and auth context in frontend
+- [x] Protect admin dashboard routes with auth middleware
+- [x] Add navigation component with logout functionality
 
 ## End User Quiz Flow
 - [x] Build complete quiz UI with questions, options, and scoring

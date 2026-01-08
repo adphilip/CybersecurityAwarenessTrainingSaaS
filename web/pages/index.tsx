@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { health, listCampaigns, getReport, startCampaign } from '../lib/api';
 import { withAuth } from '../lib/withAuth';
-import { useAuth } from '../lib/auth';
+import AdminNav from '../components/AdminNav';
 
 function Dashboard() {
-  const { logout } = useAuth();
   const [status, setStatus] = useState<string>('checking...');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [report, setReport] = useState<any>(null);
@@ -39,18 +38,13 @@ function Dashboard() {
   };
 
   return (
-    <main className="main">
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1>Admin Dashboard</h1>
-            <p>Status: {status}</p>
-          </div>
-          <button className="button" onClick={logout} style={{ backgroundColor: '#ef4444' }}>
-            Logout
-          </button>
+    <>
+      <AdminNav />
+      <main className="main">
+        <div className="card">
+          <h1>Admin Dashboard</h1>
+          <p>API Status: <strong style={{ color: status === 'ok' ? '#86efac' : '#fca5a5' }}>{status}</strong></p>
         </div>
-      </div>
 
       <div className="card">
         <h2>Campaigns</h2>
@@ -79,7 +73,8 @@ function Dashboard() {
           <pre style={{ whiteSpace: 'pre-wrap', marginTop: 12 }}>{JSON.stringify(report, null, 2)}</pre>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 
