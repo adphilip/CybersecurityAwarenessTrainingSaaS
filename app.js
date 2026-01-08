@@ -187,27 +187,57 @@ app.get('/company', async (req, res) => {
   }
 });
 
+// List all companies
+app.get('/companies', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM companies ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
 // Import employees via CSV text (body.csv)
 app.post('/employees/import', async (req, res) => {
   const { company_id, csv } = req.body;
   if (!company_id || !csv) return res.status(400).json({ error: 'company_id and csv required' });
   try {
     const records = parse(csv, { columns: true, skip_empty_lines: true });
+    
+    if (records.length === 0) {
+      return res.status(400).json({ error: 'No valid records found in CSV. Make sure CSV has an "email" column header.' });
+    }
+    
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       const inserted = [];
+      const skipped = [];
+      
       for (const row of records) {
         const email = row.email || row.Email || row.email_address;
-        if (!email) continue;
+        if (!email) {
+          skipped.push({ row, reason: 'Missing email' });
+          continue;
+        }
         const r = await client.query(
           'INSERT INTO employees (id, company_id, email, active, created_at) VALUES (gen_random_uuid(), $1, $2, true, now()) ON CONFLICT (email) DO NOTHING RETURNING *',
           [company_id, email.toLowerCase()]
         );
-        if (r.rows[0]) inserted.push(r.rows[0]);
+        if (r.rows[0]) {
+          inserted.push(r.rows[0]);
+        } else {
+          skipped.push({ email: email.toLowerCase(), reason: 'Already exists' });
+        }
       }
       await client.query('COMMIT');
-      res.json({ imported: inserted.length, rows: inserted });
+      res.json({ 
+        imported: inserted.length, 
+        skipped: skipped.length,
+        total: records.length,
+        rows: inserted 
+      });
     } catch (e) {
       await client.query('ROLLBACK');
       throw e;
@@ -215,8 +245,8 @@ app.post('/employees/import', async (req, res) => {
       client.release();
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'import_failed' });
+    console.error('Import error:', err);
+    res.status(500).json({ error: 'import_failed', message: err.message });
   }
 });
 

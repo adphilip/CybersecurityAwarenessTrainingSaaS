@@ -30,6 +30,10 @@ export async function listEmployees(companyId?: string) {
   return api<any[]>(`/employees${q}`);
 }
 
+export async function listCompanies() {
+  return api<Array<{ id: string; name: string }>>('/companies');
+}
+
 export async function createCampaign(payload: any) {
   return api('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
 }
@@ -44,4 +48,15 @@ export async function getReport(id: string) {
 
 export async function submitQuiz(token: string, payload: any) {
   return api(`/quiz/${token}/submit`, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function importEmployees(companyId: string, csv: string) {
+  return api('/employees/import', { 
+    method: 'POST', 
+    body: JSON.stringify({ company_id: companyId, csv }) 
+  });
+}
+
+export async function deactivateEmployee(id: string) {
+  return api(`/employees/${id}/deactivate`, { method: 'PATCH' });
 }
