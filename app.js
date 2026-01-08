@@ -347,22 +347,197 @@ app.get('/phishing/click/:token', async (req, res) => {
   }
 });
 
-// Quiz endpoints (simple stub)
+// Quiz endpoints
 app.get('/quiz/:token', async (req, res) => {
-  res.json({ quiz: { id: 'sample-quiz', title: '3-question micro-quiz', questions: [{ id: 1, text: 'What is phishing?' }] } });
+  const { token } = req.params;
+  
+  try {
+    // Validate token exists
+    if (!token || token.length < 10) {
+      return res.status(400).json({ error: 'invalid_token' });
+    }
+
+    // For MVP, fetch the first available quiz with questions
+    const quizResult = await pool.query(`
+      SELECT q.id, q.title
+      FROM quizzes q
+      WHERE EXISTS (SELECT 1 FROM quiz_questions qq WHERE qq.quiz_id = q.id)
+      ORDER BY q.id DESC
+      LIMIT 1
+    `);
+
+    if (quizResult.rows.length === 0) {
+      // Return default quiz if none exists
+      return res.json({
+        quiz: {
+          id: 'default',
+          title: 'Cybersecurity Awareness Quiz',
+          questions: [
+            {
+              id: '1',
+              question_text: 'What is phishing?',
+              options: ['A type of fishing', 'A fraudulent attempt to obtain sensitive information', 'A computer virus', 'A firewall'],
+              correct_option: 'B'
+            },
+            {
+              id: '2',
+              question_text: 'What should you do if you receive a suspicious email?',
+              options: ['Click all links to investigate', 'Report it to IT/Security', 'Reply to sender', 'Forward to colleagues'],
+              correct_option: 'B'
+            },
+            {
+              id: '3',
+              question_text: 'What makes a strong password?',
+              options: ['Your birthday', 'The word "password"', 'At least 12 characters with mixed types', 'Your name'],
+              correct_option: 'C'
+            }
+          ],
+          token
+        }
+      });
+    }
+
+    const quiz = quizResult.rows[0];
+    
+    // Fetch questions for this quiz
+    const questionsResult = await pool.query(`
+      SELECT id, question_text, options, correct_option
+      FROM quiz_questions
+      WHERE quiz_id = $1
+      ORDER BY id ASC
+    `, [quiz.id]);
+
+    const questions = questionsResult.rows.map(q => ({
+      id: q.id,
+      question_text: q.question_text,
+      options: Array.isArray(q.options) ? q.options : (q.options?.options || []),
+      // Don't send correct_option to client
+    }));
+
+    res.json({
+      quiz: {
+        id: quiz.id,
+        title: quiz.title,
+        questions,
+        token
+      }
+    });
+
+  } catch (err) {
+    console.error('GET /quiz/:token error:', err);
+    res.status(500).json({ error: 'db_error' });
+  }
 });
 
 app.post('/quiz/:token/submit', async (req, res) => {
-  const { employee_id, quiz_id } = req.body;
-  const score = 100;
+  const { token } = req.params;
+  const { answers } = req.body; // answers should be array of { questionId, answer }
+  
+  if (!answers || !Array.isArray(answers)) {
+    return res.status(400).json({ error: 'answers_required' });
+  }
+
   try {
+    // Track that someone clicked through from phishing email
     await pool.query(
-      'INSERT INTO quiz_attempts (id, quiz_id, employee_id, score, completed_at) VALUES (gen_random_uuid(), $1, $2, $3, now())',
-      [quiz_id || 'sample', employee_id || null, score]
+      'INSERT INTO phishing_events (id, campaign_id, employee_id, event_type, event_time) VALUES (gen_random_uuid(), NULL, NULL, $1, now())',
+      ['quiz_completed']
     );
-    res.json({ success: true, score });
+
+    // For MVP, fetch quiz questions and calculate score
+    const quizResult = await pool.query(`
+      SELECT id FROM quizzes 
+      ORDER BY id DESC 
+      LIMIT 1
+    `);
+
+    let quiz_id = 'default';
+    let score = 0;
+    let total = answers.length;
+    let results = [];
+
+    if (quizResult.rows.length > 0) {
+      quiz_id = quizResult.rows[0].id;
+      
+      // Get correct answers and options
+      const questionsResult = await pool.query(`
+        SELECT id, correct_option, options
+        FROM quiz_questions
+        WHERE quiz_id = $1
+      `, [quiz_id]);
+
+      const correctAnswers = {};
+      questionsResult.rows.forEach(q => {
+        // Store both the text answer and build a mapping from letter to text
+        const optionsArray = Array.isArray(q.options) ? q.options : (q.options?.options || []);
+        correctAnswers[q.id] = {
+          correctText: q.correct_option,
+          options: optionsArray
+        };
+      });
+
+      // Calculate score
+      answers.forEach(ans => {
+        const questionData = correctAnswers[ans.questionId];
+        if (!questionData) {
+          results.push({
+            questionId: ans.questionId,
+            isCorrect: false,
+            correctAnswer: ans.answer
+          });
+          return;
+        }
+        
+        // Convert letter (A, B, C, D) to option text
+        const optionIndex = ans.answer.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        const userAnswerText = questionData.options[optionIndex];
+        
+        // Compare with correct answer
+        const isCorrect = userAnswerText === questionData.correctText;
+        if (isCorrect) score++;
+        
+        // Find correct answer letter
+        const correctIndex = questionData.options.indexOf(questionData.correctText);
+        const correctLetter = correctIndex >= 0 ? String.fromCharCode(65 + correctIndex) : ans.answer;
+        
+        results.push({
+          questionId: ans.questionId,
+          isCorrect,
+          correctAnswer: correctLetter
+        });
+      });
+    } else {
+      // Use default quiz answers (A=1, B=2, C=3, D=4)
+      const defaultCorrect = { '1': 'B', '2': 'B', '3': 'C' };
+      answers.forEach(ans => {
+        const isCorrect = defaultCorrect[ans.questionId] === ans.answer;
+        if (isCorrect) score++;
+        results.push({
+          questionId: ans.questionId,
+          isCorrect,
+          correctAnswer: defaultCorrect[ans.questionId]
+        });
+      });
+    }
+
+    const percentScore = total > 0 ? Math.round((score / total) * 100) : 0;
+
+    // Record quiz attempt
+    await pool.query(
+      'INSERT INTO quiz_attempts (id, quiz_id, employee_id, score, completed_at) VALUES (gen_random_uuid(), $1, NULL, $2, now())',
+      [quiz_id, percentScore]
+    );
+
+    res.json({
+      success: true,
+      score: percentScore,
+      correct: score,
+      total,
+      results
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error('POST /quiz/:token/submit error:', err);
     res.status(500).json({ error: 'submit_failed' });
   }
 });
@@ -413,6 +588,37 @@ app.get('/reports/campaign/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'report_error' });
+  }
+});
+
+// Generate quiz token for employee (for testing/demo purposes)
+app.post('/generate-quiz-token', async (req, res) => {
+  const { employee_email } = req.body;
+  
+  try {
+    // Generate a unique token
+    const token = require('node:crypto').randomBytes(16).toString('hex');
+    
+    // Optionally link to employee if email provided
+    if (employee_email) {
+      const employeeResult = await pool.query(
+        'SELECT id FROM employees WHERE email = $1',
+        [employee_email]
+      );
+      
+      if (employeeResult.rows.length > 0) {
+        // Could store token-employee mapping if needed for tracking
+        console.log(`Generated token for employee: ${employee_email}`);
+      }
+    }
+    
+    res.json({ 
+      token,
+      quiz_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quiz/${token}`
+    });
+  } catch (err) {
+    console.error('Generate token error:', err);
+    res.status(500).json({ error: 'token_generation_failed' });
   }
 });
 

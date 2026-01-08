@@ -1,9 +1,16 @@
 # MVP Development Todo List
 
 ## Frontend Authentication
-- [ ] Create frontend auth pages (login + verify)
+- [x] Create frontend auth pages (login + verify)
 - [ ] Add JWT storage and auth context in frontend
 - [ ] Protect admin dashboard routes with auth middleware
+
+## End User Quiz Flow
+- [x] Build complete quiz UI with questions, options, and scoring
+- [x] Create proper quiz backend endpoints with real questions
+- [x] Add quiz result page with feedback and review
+- [x] Create employee token generation endpoint for testing
+- [x] Demo landing page for quick testing
 
 ## Backend Integrations
 - [ ] Implement Stripe billing integration (checkout + webhook)
@@ -33,3 +40,4 @@
 - [x] Magic-link authentication with JWT
 - [x] Auth endpoints with rate limiting
 - [x] Auth tests and documentation
+- [x] Complete end-user quiz flow with scoring and feedback
