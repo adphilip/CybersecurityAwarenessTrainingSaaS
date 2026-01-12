@@ -477,8 +477,6 @@ app.get('/phishing/click/:token', async (req, res) => {
 
 // Quiz endpoints
 app.get('/quiz/:token', async (req, res) => {
-  const { token } = req.params;
-  
   try {
     // Validate token exists
     if (!token || token.length < 10) {
@@ -558,7 +556,6 @@ app.get('/quiz/:token', async (req, res) => {
 });
 
 app.post('/quiz/:token/submit', async (req, res) => {
-  const { token } = req.params;
   const { answers } = req.body; // answers should be array of { questionId, answer }
   
   if (!answers || !Array.isArray(answers)) {
@@ -617,7 +614,7 @@ app.post('/quiz/:token/submit', async (req, res) => {
         }
         
         // Convert letter (A, B, C, D) to option text
-        const optionIndex = ans.answer.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        const optionIndex = ans.answer.codePointAt(0) - 65; // A=0, B=1, C=2, D=3
         const userAnswerText = questionData.options[optionIndex];
         
         // Compare with correct answer
@@ -626,7 +623,7 @@ app.post('/quiz/:token/submit', async (req, res) => {
         
         // Find correct answer letter
         const correctIndex = questionData.options.indexOf(questionData.correctText);
-        const correctLetter = correctIndex >= 0 ? String.fromCharCode(65 + correctIndex) : ans.answer;
+        const correctLetter = correctIndex >= 0 ? String.fromCodePoint(65 + correctIndex) : ans.answer;
         
         results.push({
           questionId: ans.questionId,

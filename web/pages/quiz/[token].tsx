@@ -250,7 +250,6 @@ export default function QuizPage() {
   }
 
   // Quiz taking state
-  const optionLabels = ['A', 'B', 'C', 'D'];
   const allAnswered = quiz ? quiz.questions.every(q => answers[q.id]) : false;
 
   return (
@@ -372,7 +371,7 @@ export default function QuizPage() {
             {(() => {
               if (allAnswered) return 'Click submit when ready';
               const remaining = quiz ? quiz.questions.length - Object.keys(answers).length : 0;
-              const plural = remaining !== 1 ? 's' : '';
+              const plural = remaining === 1 ? '' : 's';
               return `Please answer ${remaining} more question${plural}`;
             })()}
           </p>

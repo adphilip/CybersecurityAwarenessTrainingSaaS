@@ -109,7 +109,7 @@ describe('Performance Tests', () => {
 
   describe('Concurrent Request Tests', () => {
     test('should handle 10 concurrent health checks', async () => {
-      const requests = Array(10).fill().map(() => request(app).get('/'));
+      const requests = new Array(10).fill().map(() => request(app).get('/'));
       const start = Date.now();
       const responses = await Promise.all(requests);
       const duration = Date.now() - start;
@@ -120,7 +120,7 @@ describe('Performance Tests', () => {
     });
 
     test('should handle 20 concurrent campaign list requests', async () => {
-      const requests = Array(20).fill().map(() => 
+      const requests = new Array(20).fill().map(() => 
         request(app)
           .get('/campaigns')
           .set('Authorization', `Bearer ${jwtToken}`)
@@ -135,7 +135,7 @@ describe('Performance Tests', () => {
     });
 
     test('should handle 50 concurrent read operations', async () => {
-      const requests = Array(50).fill().map((_, i) => {
+      const requests = new Array(50).fill().map((_, i) => {
         if (i % 2 === 0) {
           return request(app).get('/campaigns');
         } else {
@@ -155,7 +155,7 @@ describe('Performance Tests', () => {
   describe('Database Performance Tests', () => {
     test('bulk employee insert should be efficient', async () => {
       const employeeCount = 100;
-      const csvData = Array(employeeCount)
+      const csvData = new Array(employeeCount)
         .fill()
         .map((_, i) => `email\nperf${i}@test.com`)
         .join('\n');
@@ -271,7 +271,7 @@ describe('Performance Tests', () => {
   describe('Memory and Resource Tests', () => {
     test('large CSV import should not cause memory issues', async () => {
       const largeCSVRows = 1000;
-      const csv = 'email\n' + Array(largeCSVRows)
+      const csv = 'email\n' + new Array(largeCSVRows)
         .fill()
         .map((_, i) => `large${i}@test.com`)
         .join('\n');
@@ -298,7 +298,7 @@ describe('Performance Tests', () => {
     });
 
     test('connection pool should handle high load', async () => {
-      const queries = Array(100).fill().map((_, i) => 
+      const queries = new Array(100).fill().map((_, i) => 
         pool.query('SELECT $1 as id', [i])
       );
       

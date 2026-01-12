@@ -273,18 +273,20 @@ jane@company.com`}
               }} />
               <p style={{ color: '#94a3b8' }}>Loading employees...</p>
             </div>
-          ) : activeEmployees.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>No active employees</p>
-              <button
-                className="button"
-                onClick={() => setShowImport(true)}
-              >
-                Import Employees
-              </button>
-            </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <>
+              {activeEmployees.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>No active employees</p>
+                  <button
+                    className="button"
+                    onClick={() => setShowImport(true)}
+                  >
+                    Import Employees
+                  </button>
+                </div>
+              ) : (
+                <table style={{
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -357,7 +359,8 @@ jane@company.com`}
                   ))}
                 </tbody>
               </table>
-            </div>
+              )}
+            </>
           )}
         </div>
 
