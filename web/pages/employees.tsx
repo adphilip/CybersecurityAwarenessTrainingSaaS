@@ -48,7 +48,10 @@ function Employees() {
     } catch (err: any) {
       console.error('Failed to load companies:', err);
     }
-  };if (!companyId) {
+  };
+
+  const handleImport = async () => {
+    if (!companyId) {
       setError('Please select a company');
       return;
     }
@@ -81,19 +84,6 @@ function Employees() {
         errorMsg = 'Invalid company ID format. Please select a company from the dropdown.';
       }
       
-      if (result.imported === 0 && result.skipped > 0) {
-        setSuccess(`No new employees imported. ${result.skipped} employee(s) already exist.`);
-      } else if (result.imported > 0 && result.skipped > 0) {
-        setSuccess(`Successfully imported ${result.imported} employee(s). ${result.skipped} already existed.`);
-      } else {
-        setSuccess(`Successfully imported ${result.imported} employee(s)`);
-      }
-      
-      setCsvText('');
-      setShowImport(false);
-      await load();
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to import employees';
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -116,6 +106,18 @@ function Employees() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (companyId) {
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId]);
 
   const activeEmployees = employees.filter(e => e.active);
   const inactiveEmployees = employees.filter(e => !e.active);
@@ -189,6 +191,11 @@ function Employees() {
             }}>
 {`email
 john@company.com
+jane@company.com`}
+            </pre>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Company
               </label>
               <select
                 className="input"
@@ -208,12 +215,6 @@ john@company.com
               </select>
               <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1rem' }}>
                 Select the company to import employees for
-                placeholder="11111111-1111-1111-1111-111111111111"
-                disabled={loading}
-                style={{ marginBottom: '0.5rem' }}
-              />
-              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1rem' }}>
-                Must be a valid UUID format (36 characters with dashes)
               </p>
             </div>
             <textarea
