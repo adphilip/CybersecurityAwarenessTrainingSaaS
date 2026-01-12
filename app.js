@@ -18,12 +18,14 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
 
-// Rate limiters
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
-  message: 'Too many auth attempts, try again later'
-});
+// Rate limiters (disabled in test mode)
+const authLimiter = process.env.NODE_ENV === 'test' 
+  ? (req, res, next) => next()  // No rate limiting in tests
+  : rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5, // 5 requests per window
+      message: 'Too many auth attempts, try again later'
+    });
 
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'cybersecurity-awareness-mvp' }));
 
@@ -140,8 +142,8 @@ app.post('/auth/verify', async (req, res) => {
   }
 });
 
-// Middleware to verify JWT
-const verifyTokenMiddleware = (req, res, next) => {
+// Middleware to verify JWT and fetch admin's company
+const verifyTokenMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'unauthorized' });
@@ -155,8 +157,58 @@ const verifyTokenMiddleware = (req, res, next) => {
   }
 
   req.adminId = decoded.admin_id;
+  
+  // Fetch admin's company_id
+  try {
+    const adminResult = await pool.query('SELECT company_id FROM admins WHERE id = $1', [decoded.admin_id]);
+    if (adminResult.rows.length > 0) {
+      req.adminCompanyId = adminResult.rows[0].company_id;
+    }
+  } catch (err) {
+    console.error('Error fetching admin company:', err);
+  }
+  
   next();
 };
+
+// UUID validation helper
+function isValidUUID(str) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+// Middleware to validate company access
+function validateCompanyAccess(source = 'body') {
+  return (req, res, next) => {
+    let company_id;
+    
+    // Get company_id from specified source (body, query, or params)
+    if (source === 'body') {
+      company_id = req.body.company_id;
+    } else if (source === 'query') {
+      company_id = req.query.company_id || req.adminCompanyId;  // Use admin's company if not specified
+    } else if (source === 'params') {
+      company_id = req.params.company_id;
+    }
+    
+    // Allow if no company_id specified in query (will use admin's company)
+    if (!company_id && source === 'query') {
+      return next();
+    }
+    
+    // Validate UUID format
+    if (company_id && !isValidUUID(company_id)) {
+      return res.status(400).json({ error: 'invalid_company_id_format' });
+    }
+    
+    // Check if admin has access to this company
+    if (company_id && req.adminCompanyId && company_id !== req.adminCompanyId) {
+      return res.status(403).json({ error: 'access_denied_to_company' });
+    }
+    
+    next();
+  };
+}
 
 // Create company (simple)
 app.post('/company', async (req, res) => {
@@ -199,9 +251,16 @@ app.get('/companies', async (req, res) => {
 });
 
 // Import employees via CSV text (body.csv)
-app.post('/employees/import', async (req, res) => {
+app.post('/employees/import', verifyTokenMiddleware, validateCompanyAccess('body'), async (req, res) => {
   const { company_id, csv } = req.body;
   if (!company_id || !csv) return res.status(400).json({ error: 'company_id and csv required' });
+  
+  // Check if company exists
+  const companyCheck = await pool.query('SELECT id FROM companies WHERE id = $1', [company_id]);
+  if (companyCheck.rows.length === 0) {
+    return res.status(404).json({ error: 'company_not_found' });
+  }
+  
   try {
     const records = parse(csv, { columns: true, skip_empty_lines: true });
     
@@ -251,8 +310,8 @@ app.post('/employees/import', async (req, res) => {
 });
 
 // List employees (optional company_id)
-app.get('/employees', async (req, res) => {
-  const { company_id } = req.query;
+app.get('/employees', verifyTokenMiddleware, validateCompanyAccess('query'), async (req, res) => {
+  const company_id = req.query.company_id || req.adminCompanyId;
   try {
     const result = company_id
       ? await pool.query('SELECT * FROM employees WHERE company_id = $1 ORDER BY created_at', [company_id])
@@ -265,9 +324,15 @@ app.get('/employees', async (req, res) => {
 });
 
 // Deactivate employee
-app.patch('/employees/:id/deactivate', async (req, res) => {
+app.patch('/employees/:id/deactivate', verifyTokenMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
+    // Check if employee belongs to admin's company
+    const empCheck = await pool.query('SELECT company_id FROM employees WHERE id = $1', [id]);
+    if (empCheck.rows.length === 0 || empCheck.rows[0].company_id !== req.adminCompanyId) {
+      return res.status(404).json({ error: 'employee_not_found_or_access_denied' });
+    }
+    
     const result = await pool.query('UPDATE employees SET active = false WHERE id = $1 RETURNING *', [id]);
     res.json(result.rows[0] || { error: 'not_found' });
   } catch (err) {
@@ -277,8 +342,25 @@ app.patch('/employees/:id/deactivate', async (req, res) => {
 });
 
 // Basic campaign create
-app.post('/campaigns', async (req, res) => {
+app.post('/campaigns', verifyTokenMiddleware, async (req, res) => {
   const { company_id, month, phishing_template_id, quiz_id } = req.body;
+  
+  // Validate UUID format first
+  if (company_id && !isValidUUID(company_id)) {
+    return res.status(400).json({ error: 'invalid_company_id_format' });
+  }
+  
+  // Check if company exists
+  const companyCheck = await pool.query('SELECT id FROM companies WHERE id = $1', [company_id]);
+  if (companyCheck.rows.length === 0) {
+    return res.status(404).json({ error: 'company_not_found' });
+  }
+  
+  // Then check authorization
+  if (company_id && req.adminCompanyId && company_id !== req.adminCompanyId) {
+    return res.status(403).json({ error: 'access_denied_to_company' });
+  }
+  
   try {
     const result = await pool.query(
       'INSERT INTO campaigns (id, company_id, month, phishing_template_id, quiz_id, status) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5) RETURNING *',
@@ -292,8 +374,8 @@ app.post('/campaigns', async (req, res) => {
 });
 
 // List campaigns (optional company_id)
-app.get('/campaigns', async (req, res) => {
-  const { company_id } = req.query;
+app.get('/campaigns', verifyTokenMiddleware, validateCompanyAccess('query'), async (req, res) => {
+  const company_id = req.query.company_id || req.adminCompanyId;
   try {
     const result = company_id
       ? await pool.query('SELECT * FROM campaigns WHERE company_id = $1 ORDER BY month DESC', [company_id])
@@ -306,11 +388,21 @@ app.get('/campaigns', async (req, res) => {
 });
 
 // Get campaign by id
-app.get('/campaigns/:id', async (req, res) => {
+app.get('/campaigns/:id', verifyTokenMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
     const result = await pool.query('SELECT * FROM campaigns WHERE id = $1', [id]);
-    res.json(result.rows[0] || { error: 'not_found' });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'campaign_not_found_or_access_denied' });
+    }
+    
+    const campaign = result.rows[0];
+    // Check if campaign belongs to admin's company
+    if (campaign.company_id !== req.adminCompanyId) {
+      return res.status(404).json({ error: 'campaign_not_found_or_access_denied' });
+    }
+    
+    res.json(campaign);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'db_error' });
@@ -318,9 +410,15 @@ app.get('/campaigns/:id', async (req, res) => {
 });
 
 // Start campaign (simple state change)
-app.post('/campaigns/:id/start', async (req, res) => {
+app.post('/campaigns/:id/start', verifyTokenMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
+    // Check if campaign belongs to admin's company
+    const campCheck = await pool.query('SELECT company_id FROM campaigns WHERE id = $1', [id]);
+    if (campCheck.rows.length === 0 || campCheck.rows[0].company_id !== req.adminCompanyId) {
+      return res.status(404).json({ error: 'campaign_not_found_or_access_denied' });
+    }
+    
     const result = await pool.query(
       'UPDATE campaigns SET status = $1, started_at = now() WHERE id = $2 RETURNING *',
       ['active', id]
@@ -573,9 +671,15 @@ app.post('/quiz/:token/submit', async (req, res) => {
 });
 
 // Metrics example
-app.get('/metrics/campaign/:id', async (req, res) => {
+app.get('/metrics/campaign/:id', verifyTokenMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
+    // Check if campaign belongs to admin's company
+    const campCheck = await pool.query('SELECT company_id FROM campaigns WHERE id = $1', [id]);
+    if (campCheck.rows.length === 0 || campCheck.rows[0].company_id !== req.adminCompanyId) {
+      return res.status(403).json({ error: 'access_denied_to_campaign' });
+    }
+    
     const total = (await pool.query(
       'SELECT count(*) FROM employees WHERE company_id = (SELECT company_id FROM campaigns WHERE id = $1)',
       [id]
@@ -592,11 +696,17 @@ app.get('/metrics/campaign/:id', async (req, res) => {
 });
 
 // Report stub
-app.get('/reports/campaign/:id', async (req, res) => {
+app.get('/reports/campaign/:id', verifyTokenMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
     const companyRow = await pool.query('SELECT company_id FROM campaigns WHERE id = $1', [id]);
     const companyId = companyRow.rows[0]?.company_id;
+    
+    // Check if campaign belongs to admin's company
+    if (!companyId || companyId !== req.adminCompanyId) {
+      return res.status(403).json({ error: 'access_denied_to_campaign' });
+    }
+    
     const total = (await pool.query('SELECT count(*) FROM employees WHERE company_id = $1', [companyId])).rows[0].count || 0;
     const opens = (await pool.query('SELECT count(*) FROM phishing_events WHERE campaign_id = $1 AND event_type = $2', [id, 'opened'])).rows[0].count || 0;
     const clicks = (await pool.query('SELECT count(*) FROM phishing_events WHERE campaign_id = $1 AND event_type = $2', [id, 'clicked'])).rows[0].count || 0;

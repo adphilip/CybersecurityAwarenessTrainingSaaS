@@ -200,7 +200,6 @@ export default function QuizPage() {
             {quiz && quiz.questions.map((question, idx) => {
               const questionResult = result.results.find(r => r.questionId === question.id);
               const userAnswer = answers[question.id];
-              const optionLabels = ['A', 'B', 'C', 'D'];
               
               return (
                 <div key={question.id} style={{ 
@@ -289,12 +288,13 @@ export default function QuizPage() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {question.options.map((option, optIdx) => {
+                const optionLabels = ['A', 'B', 'C', 'D'];
                 const optionLabel = optionLabels[optIdx];
                 const isSelected = answers[question.id] === optionLabel;
                 
                 return (
                   <label
-                    key={optIdx}
+                    key={`${question.id}-${option}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -369,10 +369,12 @@ export default function QuizPage() {
             {status === 'submitting' ? 'Submitting...' : 'Submit Quiz'}
           </button>
           <p style={{ marginTop: '1rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-            {allAnswered 
-              ? 'Click submit when ready' 
-              : `Please answer ${quiz ? quiz.questions.length - Object.keys(answers).length : 0} more question${quiz && quiz.questions.length - Object.keys(answers).length !== 1 ? 's' : ''}`
-            }
+            {(() => {
+              if (allAnswered) return 'Click submit when ready';
+              const remaining = quiz ? quiz.questions.length - Object.keys(answers).length : 0;
+              const plural = remaining !== 1 ? 's' : '';
+              return `Please answer ${remaining} more question${plural}`;
+            })()}
           </p>
         </div>
       </div>

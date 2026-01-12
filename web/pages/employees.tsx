@@ -194,10 +194,11 @@ john@company.com
 jane@company.com`}
             </pre>
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              <label htmlFor="company-select" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                 Company
               </label>
               <select
+                id="company-select"
                 className="input"
                 value={companyId}
                 onChange={(e) => setCompanyId(e.target.value)}

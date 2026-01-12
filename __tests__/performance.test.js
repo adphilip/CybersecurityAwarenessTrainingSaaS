@@ -13,12 +13,17 @@ describe('Performance Tests', () => {
       .send({ name: 'Performance Test Co', campaign_enabled: true });
     companyId = companyRes.body.id;
 
-    // Create an admin and get JWT token
+    // Create an admin linked to the company and get JWT token
     const existingAdmin = await pool.query('SELECT id FROM admins WHERE email = $1', ['perf@test.com']);
-    if (existingAdmin.rows.length === 0) {
+    if (existingAdmin.rows.length > 0) {
+      // Update existing admin with company_id
+      await pool.query('UPDATE admins SET company_id = $1 WHERE email = $2', [companyId, 'perf@test.com']);
+    } else {
+      // Insert new admin with company_id
       await pool.query(
-        `INSERT INTO admins (id, email, password_hash) 
-         VALUES (gen_random_uuid(), 'perf@test.com', crypt('password123', gen_salt('bf')))`
+        `INSERT INTO admins (id, company_id, email, password_hash) 
+         VALUES (gen_random_uuid(), $1, 'perf@test.com', crypt('password123', gen_salt('bf')))`,
+        [companyId]
       );
     }
     const loginRes = await request(app)
