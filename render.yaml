@@ -1,0 +1,32 @@
+services:
+  # Backend API Service
+  - type: web
+    name: csat-api
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: csat-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://your-frontend.vercel.app
+    healthCheckPath: /
+
+databases:
+  # PostgreSQL Database
+  - name: csat-db
+    databaseName: csat_mvp
+    user: csat_user
+    plan: starter
+    region: oregon
+    postgresMajorVersion: 15
