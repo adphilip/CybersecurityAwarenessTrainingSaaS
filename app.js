@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const { parse } = require('csv-parse/sync');
 const { signJWT, verifyJWT, sendMagicLink, TOKEN_EXPIRY } = require('./lib/auth');
+const { getAvailableTemplates, populateTemplate, loadTemplate, sendPhishingEmail } = require('./lib/phishing');
 
 const PORT = process.env.PORT || 4000;
 
@@ -756,6 +757,87 @@ app.post('/generate-quiz-token', async (req, res) => {
   } catch (err) {
     console.error('Generate token error:', err);
     res.status(500).json({ error: 'token_generation_failed' });
+  }
+});
+
+// ===== PHISHING TEMPLATE ENDPOINTS (for testing/preview) =====
+
+// GET /phishing/templates - List all available templates
+app.get('/phishing/templates', (req, res) => {
+  try {
+    const templates = getAvailableTemplates();
+    res.json({ templates });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_load_templates' });
+  }
+});
+
+// GET /phishing/templates/:id/preview - Preview a template with populated variables
+app.get('/phishing/templates/:id/preview', (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const template = loadTemplate(id);
+    const populated = populateTemplate(template, {
+      employee_name: 'John Doe',
+      employee_email: 'john.doe@example.com',
+      company_name: 'Example Corp',
+      company_domain: 'example.com',
+      phishing_link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quiz/preview-token`,
+      tracking_pixel_url: `${process.env.FRONTEND_URL || 'http://localhost:4000'}/phishing/open/preview-token`
+    });
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(populated);
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: 'template_not_found' });
+  }
+});
+
+// POST /phishing/test-send - Send a test phishing email (development only)
+app.post('/phishing/test-send', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'test_endpoint_disabled_in_production' });
+  }
+  
+  const { to, template_id } = req.body;
+  
+  if (!to || !template_id) {
+    return res.status(400).json({ error: 'to_and_template_id_required' });
+  }
+  
+  try {
+    const templates = getAvailableTemplates();
+    const template = templates.find(t => t.id === template_id);
+    
+    if (!template) {
+      return res.status(404).json({ error: 'template_not_found' });
+    }
+    
+    const result = await sendPhishingEmail({
+      to,
+      templateName: template.id,
+      subject: template.subject,
+      variables: {
+        employee_name: 'Test User',
+        employee_email: to,
+        company_name: 'Test Company',
+        company_domain: 'testcompany.com',
+        phishing_link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quiz/test-token`,
+        tracking_pixel_url: `${process.env.FRONTEND_URL || 'http://localhost:4000'}/phishing/open/test-token`
+      }
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent',
+      messageId: result.messageId
+    });
+  } catch (err) {
+    console.error('Test email error:', err);
+    res.status(500).json({ error: 'email_send_failed', details: err.message });
   }
 });
 
