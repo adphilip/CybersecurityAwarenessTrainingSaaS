@@ -19,7 +19,7 @@
 
 ## Core Features
 - [ ] Complete campaign automation cron logic
-- [ ] Build employee phishing email templates
+- [x] Build employee phishing email templates
 - [ ] Add PDF report generation for campaigns
 - [ ] Implement admin UI for campaign management
 

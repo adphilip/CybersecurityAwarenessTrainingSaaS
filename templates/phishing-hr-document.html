@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Important HR Document - Action Required</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: #107c10;
+      color: #ffffff;
+      padding: 25px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      opacity: 0.95;
+    }
+    .content {
+      padding: 30px;
+    }
+    .document-box {
+      background: #f5f5f5;
+      border: 2px dashed #999;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 25px 0;
+      text-align: center;
+    }
+    .document-icon {
+      font-size: 64px;
+      margin-bottom: 15px;
+    }
+    .document-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin: 10px 0;
+    }
+    .document-meta {
+      font-size: 13px;
+      color: #666;
+      margin: 5px 0;
+    }
+    .deadline-badge {
+      background: #ffb900;
+      color: #000;
+      padding: 8px 20px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: 700;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .button {
+      display: inline-block;
+      background: #107c10;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 16px 40px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .button:hover {
+      background: #0c5c0c;
+    }
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px 20px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    .footer {
+      background: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Human Resources</h1>
+      <p>{{company_name}} - Employee Services</p>
+    </div>
+    
+    <div class="content">
+      <p>Dear {{employee_name}},</p>
+      
+      <p>The HR Department requires your immediate attention to review and electronically sign an important document.</p>
+      
+      <div class="document-box">
+        <div class="document-icon">📄</div>
+        <div class="document-title">2026 Benefits Enrollment Form</div>
+        <div class="document-meta">Document ID: HR-BEN-{{random_number}}</div>
+        <div class="document-meta">Issued: {{issue_date}}</div>
+        <div class="document-meta">Status: <span style="color: #d13438; font-weight: 600;">Pending Signature</span></div>
+      </div>
+      
+      <span class="deadline-badge">⏰ DEADLINE: {{deadline_date}}</span>
+      
+      <p style="margin-top: 20px;">
+        <strong>Action Required:</strong> Review and electronically sign your benefits enrollment form by the deadline above. Failure to complete this form may result in loss of benefits coverage.
+      </p>
+      
+      <div class="info-box">
+        <strong>📌 What's included:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Health insurance plan selections</li>
+          <li>Dental and vision coverage options</li>
+          <li>401(k) contribution elections</li>
+          <li>Life insurance beneficiary updates</li>
+          <li>Flexible Spending Account (FSA) enrollment</li>
+        </ul>
+      </div>
+      
+      <p style="font-weight: 600; color: #107c10;">This will only take 5-10 minutes to complete.</p>
+      
+      <center>
+        <a href="{{phishing_link}}" class="button">Review & Sign Document</a>
+      </center>
+      
+      <p style="font-size: 13px; color: #666; margin-top: 25px;">
+        Or copy and paste this secure link into your browser:<br>
+        <span style="color: #107c10; word-break: break-all;">{{phishing_link}}</span>
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+      
+      <p style="font-size: 13px; color: #666;">
+        <strong>Important Notes:</strong>
+      </p>
+      <ul style="font-size: 13px; color: #666;">
+        <li>This document requires electronic signature using your employee credentials</li>
+        <li>If you miss the deadline, you may need to wait until next year's open enrollment period</li>
+        <li>Contact HR at hr@{{company_domain}} if you have questions</li>
+      </ul>
+      
+      <p style="font-size: 12px; color: #999; margin-top: 25px;">
+        <strong>Confidentiality Notice:</strong> This email and any attachments contain confidential information intended solely for the individual(s) named. If you are not the intended recipient, please delete this email immediately.
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p style="font-weight: 600;">{{company_name}} - Human Resources Department</p>
+      <p>📧 hr@{{company_domain}} | 📞 Ext. 4200</p>
+      <p style="margin-top: 15px; font-size: 11px;">
+        123 Corporate Plaza, 5th Floor | City, ST 12345
+      </p>
+      <p style="margin-top: 10px;">© 2026 {{company_name}}. All rights reserved.</p>
+    </div>
+  </div>
+  
+  <!-- Tracking pixel -->
+  <img src="{{tracking_pixel_url}}" width="1" height="1" style="display:none;" alt="">
+</body>
+</html>

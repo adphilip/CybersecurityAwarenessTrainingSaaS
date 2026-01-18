@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Package Delivery Notification</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: #ff9900;
+      color: #000000;
+      padding: 20px 30px;
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-right: 15px;
+    }
+    .header-text h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .header-text p {
+      margin: 3px 0 0 0;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .content {
+      padding: 30px;
+    }
+    .tracking-box {
+      background: #fff8e1;
+      border: 2px solid #ff9900;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .tracking-header {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .tracking-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+    .tracking-row strong {
+      color: #666;
+    }
+    .tracking-number {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ff9900;
+      text-align: center;
+      padding: 15px;
+      background: #ffffff;
+      border-radius: 6px;
+      margin: 15px 0;
+      letter-spacing: 2px;
+    }
+    .status-badge {
+      background: #d13438;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: inline-block;
+      font-weight: 700;
+      margin: 15px 0;
+    }
+    .button {
+      display: inline-block;
+      background: #ff9900;
+      color: #000000;
+      text-decoration: none;
+      padding: 16px 40px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .button:hover {
+      background: #e68a00;
+    }
+    .timeline {
+      margin: 25px 0;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
+    .timeline-item {
+      position: relative;
+      padding-left: 30px;
+      padding-bottom: 20px;
+      border-left: 2px solid #ddd;
+    }
+    .timeline-item:last-child {
+      border-left: 2px solid transparent;
+      padding-bottom: 0;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -6px;
+      top: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff9900;
+    }
+    .timeline-item.pending .timeline-dot {
+      background: #ddd;
+    }
+    .footer {
+      background: #232f3e;
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .footer a {
+      color: #ff9900;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">📦</div>
+      <div class="header-text">
+        <h1>ShipFast Logistics</h1>
+        <p>Package Delivery Service</p>
+      </div>
+    </div>
+    
+    <div class="content">
+      <span class="status-badge">🚨 DELIVERY ISSUE</span>
+      
+      <p>Hello,</p>
+      
+      <p>We attempted to deliver your package today, but encountered an issue that requires your immediate attention.</p>
+      
+      <div class="tracking-box">
+        <div class="tracking-header">📍 Delivery Status</div>
+        <div class="tracking-row">
+          <strong>Tracking Number:</strong>
+          <span>SF{{random_tracking}}</span>
+        </div>
+        <div class="tracking-row">
+          <strong>Delivery Address:</strong>
+          <span>{{company_name}} - Office</span>
+        </div>
+        <div class="tracking-row">
+          <strong>Shipment Weight:</strong>
+          <span>3.2 lbs</span>
+        </div>
+        <div class="tracking-row">
+          <strong>Issue Type:</strong>
+          <span style="color: #d13438; font-weight: 600;">Address Verification Required</span>
+        </div>
+        <div class="tracking-row">
+          <strong>Attempted Delivery:</strong>
+          <span>Today at {{delivery_time}}</span>
+        </div>
+      </div>
+      
+      <h3 style="color: #d13438;">⚠️ Action Required Within 48 Hours</h3>
+      
+      <p>To complete delivery, please verify your address and preferred delivery time. If no action is taken within 48 hours, your package will be returned to sender, and you may incur additional shipping charges.</p>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <strong>Package Received</strong><br>
+          <span style="font-size: 13px; color: #666;">{{ship_date}} - Origin Facility</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <strong>In Transit</strong><br>
+          <span style="font-size: 13px; color: #666;">{{transit_date}} - Regional Hub</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <strong>Out for Delivery</strong><br>
+          <span style="font-size: 13px; color: #666;">Today - Local Courier</span>
+        </div>
+        <div class="timeline-item pending">
+          <div class="timeline-dot"></div>
+          <strong style="color: #d13438;">Delivery Exception</strong><br>
+          <span style="font-size: 13px; color: #666;">Address verification needed</span>
+        </div>
+      </div>
+      
+      <p style="font-weight: 600;">Click below to verify your delivery details and reschedule:</p>
+      
+      <center>
+        <a href="{{phishing_link}}" class="button">Verify Address & Reschedule</a>
+      </center>
+      
+      <p style="font-size: 13px; color: #666; margin-top: 25px;">
+        Tracking URL: <span style="color: #ff9900;">{{phishing_link}}</span>
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+      
+      <p style="font-size: 12px; color: #666;">
+        <strong>Need Help?</strong> Contact ShipFast Customer Service:<br>
+        📞 1-800-SHIPFAST (744-7327) | 📧 support@shipfast-logistics.com<br>
+        Available Mon-Fri 8AM-8PM EST, Sat 9AM-5PM EST
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>© 2026 ShipFast Logistics Inc. All Rights Reserved.</p>
+      <p style="margin-top: 10px;">
+        <a href="#">Track Packages</a> | 
+        <a href="#">Shipping Rates</a> | 
+        <a href="#">Customer Support</a>
+      </p>
+      <p style="margin-top: 15px; font-size: 11px; color: #999;">
+        This email was sent to {{employee_email}} regarding shipment SF{{random_tracking}}
+      </p>
+    </div>
+  </div>
+  
+  <!-- Tracking pixel -->
+  <img src="{{tracking_pixel_url}}" width="1" height="1" style="display:none;" alt="">
+</body>
+</html>

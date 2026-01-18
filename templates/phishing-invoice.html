@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Payment Required</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: #2d2d2d;
+      color: #ffffff;
+      padding: 25px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .invoice-box {
+      background: #f9f9f9;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .invoice-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .invoice-row:last-child {
+      border-bottom: none;
+      font-weight: 700;
+      font-size: 18px;
+      margin-top: 10px;
+      padding-top: 15px;
+      border-top: 2px solid #2d2d2d;
+    }
+    .urgent-badge {
+      background: #d13438;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      display: inline-block;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    .button {
+      display: inline-block;
+      background: #0078d4;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 16px 40px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .button:hover {
+      background: #005a9e;
+    }
+    .footer {
+      background: #2d2d2d;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>INVOICE</h1>
+      <p style="margin: 5px 0 0 0; font-size: 14px; color: #ccc;">Invoice #INV-{{random_number}}</p>
+    </div>
+    
+    <div class="content">
+      <span class="urgent-badge">⚠️ PAYMENT OVERDUE</span>
+      
+      <p>Dear {{employee_name}},</p>
+      
+      <p>This is a reminder that invoice <strong>#INV-{{random_number}}</strong> for your recent software subscription renewal is now <strong>7 days overdue</strong>.</p>
+      
+      <div class="invoice-box">
+        <div class="invoice-row">
+          <span>Invoice Date:</span>
+          <span>{{invoice_date}}</span>
+        </div>
+        <div class="invoice-row">
+          <span>Due Date:</span>
+          <span style="color: #d13438; font-weight: 600;">{{due_date}}</span>
+        </div>
+        <div class="invoice-row">
+          <span>Service:</span>
+          <span>Annual Software License</span>
+        </div>
+        <div class="invoice-row">
+          <span>Account:</span>
+          <span>{{company_name}}</span>
+        </div>
+        <div class="invoice-row">
+          <span style="font-size: 18px;">Amount Due:</span>
+          <span style="color: #d13438;">$2,847.00</span>
+        </div>
+      </div>
+      
+      <p style="color: #d13438; font-weight: 600;">
+        ⚠️ Your service will be suspended within 48 hours if payment is not received.
+      </p>
+      
+      <p>To avoid service interruption and late fees, please review and pay your invoice immediately:</p>
+      
+      <center>
+        <a href="{{phishing_link}}" class="button">View & Pay Invoice Now</a>
+      </center>
+      
+      <p style="font-size: 13px; color: #666; margin-top: 30px;">
+        If you have already paid this invoice, please disregard this notice. If you have questions about your account, contact our billing department at billing@vendor-services.com
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+      
+      <p style="font-size: 11px; color: #999;">
+        <strong>Important:</strong> Failure to pay may result in service suspension, collection agency referral, and additional fees up to $150.
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>© 2026 Global Software Solutions Inc.</p>
+      <p>Payment Support: +1 (888) 555-0123 | billing@vendor-services.com</p>
+      <p style="margin-top: 15px;">456 Enterprise Blvd, Suite 200, Metro City, ST 67890</p>
+    </div>
+  </div>
+  
+  <!-- Tracking pixel -->
+  <img src="{{tracking_pixel_url}}" width="1" height="1" style="display:none;" alt="">
+</body>
+</html>
