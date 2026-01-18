@@ -26,7 +26,7 @@
 ## Compliance & Deployment
 - [ ] Add GDPR data export and deletion endpoints
 - [ ] Set up deployment (Vercel frontend + Render backend)
-- [ ] Add environment variables documentation for production
+- [x] Add environment variables documentation for production
 
 ---
 
