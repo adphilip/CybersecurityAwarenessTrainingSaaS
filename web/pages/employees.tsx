@@ -119,8 +119,8 @@ function Employees() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
-  const activeEmployees = employees.filter(e => e.active);
-  const inactiveEmployees = employees.filter(e => !e.active);
+  const activeEmployees = employees.filter((e) => e.active);
+  const inactiveEmployees = employees.filter((e) => !e.active);
 
   return (
     <>
@@ -286,10 +286,9 @@ jane@company.com`}
                   </button>
                 </div>
               ) : (
-                <table style={{
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     <th style={{ padding: '0.75rem', textAlign: 'left', color: '#94a3b8', fontSize: '0.875rem', fontWeight: '500' }}>
                       Email
                     </th>

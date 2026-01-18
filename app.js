@@ -478,6 +478,7 @@ app.get('/phishing/click/:token', async (req, res) => {
 
 // Quiz endpoints
 app.get('/quiz/:token', async (req, res) => {
+  const token = req.params.token;
   try {
     // Validate token exists
     if (!token || token.length < 10) {
