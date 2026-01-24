@@ -15,7 +15,7 @@
 
 ## Backend Integrations
 - [ ] Implement Stripe billing integration (checkout + webhook)
-- [ ] Configure production email delivery (SES or SMTP)
+- [x] Configure production email delivery (SES or SMTP)
 
 ## Core Features
 - [ ] Complete campaign automation cron logic

@@ -6,6 +6,7 @@ const { Pool } = require('pg');
 const { parse } = require('csv-parse/sync');
 const { signJWT, verifyJWT, sendMagicLink, TOKEN_EXPIRY } = require('./lib/auth');
 const { getAvailableTemplates, populateTemplate, loadTemplate, sendPhishingEmail } = require('./lib/phishing');
+const emailService = require('./lib/email-service');
 
 const PORT = process.env.PORT || 4000;
 
@@ -29,6 +30,25 @@ const authLimiter = process.env.NODE_ENV === 'test'
     });
 
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'cybersecurity-awareness-mvp' }));
+
+// ===== EMAIL SERVICE ENDPOINTS =====
+
+// GET /email/status - Check email service configuration
+app.get('/email/status', (req, res) => {
+  const info = emailService.getInfo();
+  res.json(info);
+});
+
+// POST /email/verify - Verify SMTP connection
+app.post('/email/verify', async (req, res) => {
+  try {
+    const result = await emailService.verify();
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ===== AUTH ENDPOINTS =====
 
